@@ -1,0 +1,47 @@
+目的
+- 引入“静态微信收款码”支付方式（无回调），前端展示静态二维码
+- 在后台订单页提供“确认收款并发货”按钮，触发自动发货
+
+目录说明
+- patch/OrderController.php：替换 app/Admin/Controllers/OrderController.php
+- patch/StripeController.php：替换 app/Http/Controllers/Pay/StripeController.php
+
+应用补丁步骤（生产环境）
+1) 备份原文件
+   - 备份 app/Admin/Controllers/OrderController.php
+   - 备份 app/Http/Controllers/Pay/StripeController.php
+
+2) 覆盖替换
+   - 将 patch/OrderController.php 覆盖到 app/Admin/Controllers/OrderController.php
+   - 将 patch/StripeController.php 覆盖到 app/Http/Controllers/Pay/StripeController.php
+
+3) 后台新增支付通道（静态微信）
+   - 名称：静态微信收款
+   - 标识（pay_check）：offline_wechat
+   - 处理路由（pay_handleroute）：/pay/stripe
+   - 支付方式（pay_method）：扫码
+   - 客户端（pay_client）：通用 或 PC
+   - 商户 ID（merchant_id）：任意占位（必填）
+   - 商户密钥（merchant_pem）：任意占位（必填）
+   - 商户 KEY（merchant_key）：填写静态收款码图片的完整 URL
+   - 启用（is_open）：开启
+
+4) 使用流程
+   - 用户下单选择“静态微信收款”后，会看到静态二维码页面
+   - 完成付款后，登录后台 → 订单 → 找到该订单
+   - 点击列表行右侧的“确认收款并发货”按钮（仅在自动发货商品、状态为“待支付/已付款待处理”时显示）
+   - 系统将以订单实际金额触发自动发货流程，订单状态变为“已完成”，卡密等按原逻辑发货
+
+5) 验证
+   - 下单一个自动发货商品（确保有库存/卡密）
+   - 选择“静态微信收款”，页面能正常显示二维码
+   - 后台点击“确认收款并发货”，查看订单详情：状态变更为已完成、发货信息已生成
+
+6) 回滚
+   - 如需撤回补丁，恢复第1步的备份文件到原路径
+   - 后台停用或删除“offline_wechat”支付通道
+
+注意
+- “merchant_key”需为前端可访问的二维码图片 URL
+- 该方案不新增路由与文件类型，仅替换控制器，兼容现有架构
+- 若有缓存，更新后可执行 php artisan config:clear、php artisan route:clear（可选）
