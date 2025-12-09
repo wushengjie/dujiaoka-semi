@@ -78,9 +78,9 @@ class OrderController extends AdminController
                 } else {
                     $status = $actions->row->status;
                     $type = $actions->row->type;
-                    if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
+                    if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
                         $url = url(config('admin.route.prefix').'/order/'.$actions->row->id).'?deliver=1';
-                        $actions->append('<a class="btn btn-sm btn-success" href="'.$url.'">确认收款并发货</a>');
+                        $actions->append('<a class="btn btn-sm btn-success" href="'.$url.'">确认付款成功并发货</a>');
                     }
                 }
             });
@@ -103,7 +103,7 @@ class OrderController extends AdminController
     {
         if (request()->get('deliver') == 1) {
             $ord = OrderModel::query()->with('goods')->find($id);
-            if ($ord && $ord->type == OrderModel::AUTOMATIC_DELIVERY && in_array($ord->status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING])) {
+            if ($ord && $ord->type == OrderModel::AUTOMATIC_DELIVERY && in_array($ord->status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED])) {
                 app('Service\OrderProcessService')->completedOrder($ord->order_sn, (float)$ord->actual_price, 'offline');
             }
         }
