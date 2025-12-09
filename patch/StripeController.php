@@ -19,7 +19,7 @@ class StripeController extends PayController
             $price = $this->order->actual_price;
             $orderid = $this->order->order_sn;
             $qr = $this->payGateway->merchant_key;
-            $html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>收银台</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/amazeui@2.7.2/dist/css/amazeui.min.css\"></head><body><div class=\"am-container\" style=\"padding:30px 0;text-align:center\"><h2>付款信息<div class=\"am-topbar-right\">¥{$price}</div></h2><p><small>订单编号：{$orderid}</small></p><div style=\"margin-top:20px\"><p class='am-alert am-alert-secondary'>请使用微信扫描下方二维码完成支付</p><img src=\"{$qr}\" alt=\"微信收款二维码\" style=\"max-width:280px;width:100%;border:1px solid #eee;padding:10px\"/></div><div class=\"my-footer\"><p>完成付款后请回到管理后台在订单详情页点击“确认收款并发货”。</p></div></div></body></html>";
+            $html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>收银台</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/amazeui@2.7.2/dist/css/amazeui.min.css\"></head><body><div class=\"am-container\" style=\"padding:30px 0;text-align:center\"><h2>付款信息<div class=\"am-topbar-right\">¥{$price}</div></h2><p><small>订单编号：{$orderid}</small></p><div style=\"margin-top:20px\"><p class='am-alert am-alert-secondary'>请使用微信扫描下方二维码完成支付</p><img src=\"{$qr}\" alt=\"微信收款二维码\" style=\"max-width:280px;width:100%;border:1px solid #eee;padding:10px\"/></div><div class=\"my-footer\"><p>完成付款后24小时内发货到电子邮箱，如未收到卡密请联系店主</p></div></div></body></html>";
             return $html;
         }
         switch ($payway) {
