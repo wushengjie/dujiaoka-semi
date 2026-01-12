@@ -80,7 +80,8 @@ class OrderController extends AdminController
                     $type = $actions->row->type;
                     if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
                         $url = url(config('admin.route.prefix').'/order/'.$actions->row->id).'?deliver=1';
-                        $actions->append('<a class="btn btn-sm btn-success" href="'.$url.'">确认付款成功并发货</a>');
+                        $actions->append('<a class="btn btn-sm btn-success deliver-btn" href="'.$url.'" target="_blank" data-url="'.$url.'">确认付款成功并发货</a>');
+                        Admin::script('$(document).off("click",".deliver-btn").on("click",".deliver-btn",function(e){e.preventDefault();var t=$(this);t.prop("disabled",true).addClass("disabled");$.ajax({url:t.data("url"),type:"GET"}).done(function(){if(window.Dcat&&Dcat.success){Dcat.success("操作成功");}else{alert("操作成功");}t.remove();}).fail(function(){if(window.Dcat&&Dcat.error){Dcat.error("操作失败");}else{alert("操作失败");}t.prop("disabled",false).removeClass("disabled");});});');
                     }
                 }
             });
