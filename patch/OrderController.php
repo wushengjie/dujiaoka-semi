@@ -35,7 +35,7 @@ class OrderController extends AdminController
                     $type = $this->type;
                     if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
                         $url = url(config('admin.route.prefix').'/order/'.$this->id).'?deliver=1';
-                        return '<a class="btn btn-sm btn-success" href="'.$url.'">发货</a>';
+                        return '<a class="btn btn-sm btn-success deliver-btn" href="'.$url.'" data-url="'.$url.'">发货</a>';
                     }
                     return '';
                 });
@@ -48,7 +48,9 @@ class OrderController extends AdminController
                         OrderModel::AUTOMATIC_DELIVERY => Admin::color()->success(),
                         OrderModel::MANUAL_PROCESSING => Admin::color()->info(),
                     ]);
-                $grid->column('email')->limit(18)->copyable();
+                $grid->column('email')->display(function ($value) {
+                    return \Illuminate\Support\Str::limit($value, 18, '...');
+                })->copyable();
                 $grid->column('actual_price');
                 $grid->column('status')->select(OrderModel::getStatusMap());
                 $grid->column('created_at');
@@ -106,7 +108,7 @@ class OrderController extends AdminController
                         $type = $actions->row->type;
                         if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
                             $url = url(config('admin.route.prefix').'/order/'.$actions->row->id).'?deliver=1';
-                            $actions->append('<a class="btn btn-sm btn-success" href="'.$url.'">确认付款成功并发货</a>');
+                            $actions->append('<a class="btn btn-sm btn-success deliver-btn" href="'.$url.'" data-url="'.$url.'">确认付款成功并发货</a>');
                         }
                     }
                 }
@@ -116,6 +118,7 @@ class OrderController extends AdminController
                     $batch->add(new BatchRestore(OrderModel::class));
                 }
             });
+            Admin::script('$(document).off("click",".deliver-btn").on("click",".deliver-btn",function(e){e.preventDefault();var t=$(this);var u=t.data("url");t.prop("disabled",true).addClass("disabled");$.ajax({url:u,type:"GET"}).done(function(){if(window.Dcat&&Dcat.success){Dcat.success("操作成功");}else{alert("操作成功");}t.remove();}).fail(function(){if(window.Dcat&&Dcat.error){Dcat.error("操作失败");}else{alert("操作失败");}t.prop("disabled",false).removeClass("disabled");});});');
         });
     }
 
