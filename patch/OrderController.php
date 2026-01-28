@@ -28,31 +28,56 @@ class OrderController extends AdminController
     {
         return Grid::make(new Order(['goods', 'coupon', 'pay']), function (Grid $grid) {
             $grid->model()->orderBy('id', 'DESC');
-            $grid->column('id')->sortable();
-            $grid->column('order_sn')->copyable();
-            $grid->column('title');
-            $grid->column('type')->using(OrderModel::getTypeMap())
-                ->label([
-                    OrderModel::AUTOMATIC_DELIVERY => Admin::color()->success(),
-                    OrderModel::MANUAL_PROCESSING => Admin::color()->info(),
-                ]);
-            $grid->column('email')->copyable();
-            $grid->column('goods.gd_name', admin_trans('order.fields.goods_id'));
-            $grid->column('goods_price');
-            $grid->column('buy_amount');
-            $grid->column('total_price');
-            $grid->column('coupon.coupon', admin_trans('order.fields.coupon_id'));
-            $grid->column('coupon_discount_price');
-            $grid->column('wholesale_discount_price');
-            $grid->column('actual_price');
-            $grid->column('pay.pay_name', admin_trans('order.fields.pay_id'));
-            $grid->column('buy_ip');
-            $grid->column('search_pwd')->copyable();
-            $grid->column('trade_no')->copyable();
-            $grid->column('status')
-                ->select(OrderModel::getStatusMap());
-            $grid->column('created_at');
-            $grid->column('updated_at')->sortable();
+            $isMobile = preg_match('/Mobile|Android|iPhone|iPad|iPod|Windows Phone/i', request()->header('User-Agent'));
+            if ($isMobile) {
+                $grid->column('operate', '操作')->display(function () {
+                    $status = $this->status;
+                    $type = $this->type;
+                    if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
+                        $url = url(config('admin.route.prefix').'/order/'.$this->id).'?deliver=1';
+                        return '<a class="btn btn-sm btn-success" href="'.$url.'">发货</a>';
+                    }
+                    return '';
+                });
+                $grid->disableRowSelector();
+                $grid->column('id')->sortable();
+                $grid->column('order_sn')->copyable();
+                $grid->column('title')->limit(16);
+                $grid->column('type')->using(OrderModel::getTypeMap())
+                    ->label([
+                        OrderModel::AUTOMATIC_DELIVERY => Admin::color()->success(),
+                        OrderModel::MANUAL_PROCESSING => Admin::color()->info(),
+                    ]);
+                $grid->column('email')->limit(18)->copyable();
+                $grid->column('actual_price');
+                $grid->column('status')->select(OrderModel::getStatusMap());
+                $grid->column('created_at');
+            } else {
+                $grid->column('id')->sortable();
+                $grid->column('order_sn')->copyable();
+                $grid->column('title');
+                $grid->column('type')->using(OrderModel::getTypeMap())
+                    ->label([
+                        OrderModel::AUTOMATIC_DELIVERY => Admin::color()->success(),
+                        OrderModel::MANUAL_PROCESSING => Admin::color()->info(),
+                    ]);
+                $grid->column('email')->copyable();
+                $grid->column('goods.gd_name', admin_trans('order.fields.goods_id'));
+                $grid->column('goods_price');
+                $grid->column('buy_amount');
+                $grid->column('total_price');
+                $grid->column('coupon.coupon', admin_trans('order.fields.coupon_id'));
+                $grid->column('coupon_discount_price');
+                $grid->column('wholesale_discount_price');
+                $grid->column('actual_price');
+                $grid->column('pay.pay_name', admin_trans('order.fields.pay_id'));
+                $grid->column('buy_ip');
+                $grid->column('search_pwd')->copyable();
+                $grid->column('trade_no')->copyable();
+                $grid->column('status')->select(OrderModel::getStatusMap());
+                $grid->column('created_at');
+                $grid->column('updated_at')->sortable();
+            }
             $grid->disableCreateButton();
             $grid->filter(function (Grid\Filter $filter) {
                 $filter->equal('order_sn');
@@ -72,15 +97,17 @@ class OrderController extends AdminController
                 })->datetime();
                 $filter->scope(admin_trans('dujiaoka.trashed'))->onlyTrashed();
             });
-            $grid->actions(function (Grid\Displayers\Actions $actions) {
+            $grid->actions(function (Grid\Displayers\Actions $actions) use ($isMobile) {
                 if (request('_scope_') == admin_trans('dujiaoka.trashed')) {
                     $actions->append(new Restore(OrderModel::class));
                 } else {
-                    $status = $actions->row->status;
-                    $type = $actions->row->type;
-                    if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
-                        $url = url(config('admin.route.prefix').'/order/'.$actions->row->id).'?deliver=1';
-                        $actions->append('<a class="btn btn-sm btn-success" href="'.$url.'">确认付款成功并发货</a>');
+                    if (!$isMobile) {
+                        $status = $actions->row->status;
+                        $type = $actions->row->type;
+                        if (in_array($status, [OrderModel::STATUS_WAIT_PAY, OrderModel::STATUS_PENDING, OrderModel::STATUS_EXPIRED]) && $type == OrderModel::AUTOMATIC_DELIVERY) {
+                            $url = url(config('admin.route.prefix').'/order/'.$actions->row->id).'?deliver=1';
+                            $actions->append('<a class="btn btn-sm btn-success" href="'.$url.'">确认付款成功并发货</a>');
+                        }
                     }
                 }
             });
